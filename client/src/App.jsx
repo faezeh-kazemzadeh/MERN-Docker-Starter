@@ -4,6 +4,7 @@ import reactLogo from './assets/react.svg';
 import viteLogo from '/vite.svg';
 import './App.css';
 
+import AppRouter from './core/router/AppRouter';
 function App() {
   const [message, setMessage] = useState('');
   const [count, setCount] = useState(0);
@@ -48,6 +49,7 @@ function App() {
 
   return (
     <>
+    <AppRouter />
       <div>
         <a href="https://vitejs.dev" target="_blank" rel="noopener noreferrer">
           <img src={viteLogo} className="logo" alt="Vite logo" />
