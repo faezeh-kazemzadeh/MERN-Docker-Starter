@@ -4,7 +4,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { clearAuth } from "../redux/authSlice";
 import { validateToken } from "../services/authService";
 import ResetPasswordForm from "../components/ResetPasswordForm";
+// import usePageTitle from "../../core/hooks/usePageTitle";
+import usePageTitle from "../../../core/hooks/usePageTitle";
 function ResetPasswordPage() {
+  usePageTitle("Reset Password");
   const params = useParams();
   const token = params.token;
 

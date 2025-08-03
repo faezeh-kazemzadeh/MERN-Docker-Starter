@@ -1,8 +1,10 @@
 import React from "react";
 import SignupForm from "../components/SignupForm";
 import signupImage from "../../../assets/images/signup.png";
+import usePageTitle from "../../../core/hooks/usePageTitle";
 
 const SignUp = () => {
+  usePageTitle("Sign Up");
   return (
     <>
       <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">

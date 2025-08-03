@@ -1,8 +1,11 @@
 import React from "react";
 import LoginForm from "../components/LoginForm";
 import signinImage from "../../../assets/images/signin.png";
+import usePageTitle from "../../../core/hooks/usePageTitle";
+
 
 function SignIn() {
+  usePageTitle("Sign In");
   return (
     <>
       <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
