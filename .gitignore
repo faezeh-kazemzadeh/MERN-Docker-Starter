@@ -18,3 +18,4 @@ client/dist/
 .env
 .env.local
 .env.*.local
+.env.docker
