@@ -8,7 +8,7 @@ function PrivateRoutesLayout() {
 
     useEffect(() => {
         if (!isAuthenticated) {
-            navigate("/login", { replace: true });
+            navigate("/signin", { replace: true });
         }
     }, [isAuthenticated, navigate]);
 
