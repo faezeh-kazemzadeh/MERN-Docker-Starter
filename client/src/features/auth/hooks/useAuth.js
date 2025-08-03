@@ -47,6 +47,7 @@ export const useAuth = () => {
 
   const logout = useCallback(async () => {
     await dispatch(signOut());
+    navigate("/signin", { replace: true });
   }, [dispatch]);
 
   const requestPasswordResetLink = useCallback(
@@ -71,19 +72,7 @@ export const useAuth = () => {
     dispatch(clearAuth());
   }, [dispatch]);
 
-  useEffect(() => {
-    if (isAuthenticated && (location.pathname === "/signin" || location.pathname === "/signup")) {
-      navigate("/");
-    } else if (
-      !isAuthenticated &&
-      location.pathname !== "/signin" &&
-      location.pathname !== "/signup" &&
-      !location.pathname.startsWith("/reset-password/")
-    ) {
-      // navigate('/signin'); 
-    }
-  }, [isAuthenticated, navigate, location]);
-
+  
   return {
     currentUser,
     isAuthenticated,
