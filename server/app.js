@@ -8,7 +8,7 @@ import { errorHandlerMiddelware } from './middleware/errorHandler.middleware.js'
 
 
 import authRouter from './routes/auth.route.js';
-import userRouter from './routes/user.route.js';
+// import userRouter from './routes/user.route.js';
 
 
 dotenv.config();
@@ -31,7 +31,7 @@ app.use(express.static("upload"));
 
 
 app.use('/api/auth',authRouter);
-app.use('/api/users',userRouter);
+// app.use('/api/users',userRouter);
 
 app.get('/',(req, res) => {
     res.json({ message: '   API is running from Docker!' });
