@@ -37,31 +37,40 @@ const confirmPasswordValidation = (refName) => {
     .oneOf([Yup.ref(refName), null], "Passwords must match")
     .required("Confirm Password is required");
 };
-
+const phoneValidation = () => {
+  return Yup.string()
+    .matches(
+      /^\+?[0-9]{10,15}$/,
+      "Phone number is not valid"
+    )
+    .required("Phone number is required");
+};
 export const commonValidations = {
   requiredString: requiredStringValidation,
   email: emailValidation,
   password: passwordValidation,
   confirmPassword: confirmPasswordValidation,
+  phone:phoneValidation
 };
 
-export const validationSchemas = {
-  signIn: Yup.object().shape({
-    email: emailValidation(),
-    password: passwordValidation(),
-  }),
-  signUp: Yup.object().shape({
-    name: requiredStringValidation("Name"),
-    email: emailValidation(),
-    password: passwordValidation(),
-    confirmPassword: confirmPasswordValidation("password"), // ارجاع به فیلد 'password'
-  }),
-  resetPassword: Yup.object().shape({
-    newPassword: passwordValidation(),
-    confirmNewPassword: confirmPasswordValidation("newPassword"), // ارجاع به فیلد 'newPassword'
-  }),
-  updateProfile: Yup.object().shape({
-    name: requiredStringValidation("Name"),
-    email: emailValidation(),
-  }),
-};
+// export const validationSchemas = {
+//   signIn: Yup.object().shape({
+//     email: emailValidation(),
+//     password: passwordValidation(),
+//   }),
+//   signUp: Yup.object().shape({
+//     name: requiredStringValidation("Name"),
+//     email: emailValidation(),
+//     password: passwordValidation(),
+//     confirmPassword: confirmPasswordValidation("password"), // ارجاع به فیلد 'password'
+//   }),
+//   resetPassword: Yup.object().shape({
+//     newPassword: passwordValidation(),
+//     confirmNewPassword: confirmPasswordValidation("newPassword"), // ارجاع به فیلد 'newPassword'
+//   }),
+//   updateProfile: Yup.object().shape({
+//     name: requiredStringValidation("Name"),
+//     email: emailValidation(),
+//     phone: phoneValidation()
+//   }),
+// };

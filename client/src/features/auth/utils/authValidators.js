@@ -26,5 +26,6 @@ export const resetPasswordSchema = Yup.object({
 export const updateProfileSchema = Yup.object({
   firstname: validations.requiredString("First Name" , 3 , 50),
   lastname: validations.requiredString("Last Name" , 3 , 150),
+  phone:validations.phone()
 })
 
