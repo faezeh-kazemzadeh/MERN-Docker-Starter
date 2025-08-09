@@ -99,6 +99,7 @@ UserSchema.statics.validateUserProfile = (user) => {
   const schema = Joi.object({
     firstname: Joi.string().min(3).max(150),
     lastname: Joi.string().min(3).max(150),
+    phone: Joi.string(),
     
   });
   return schema.validate(user, { abortEarly: false });

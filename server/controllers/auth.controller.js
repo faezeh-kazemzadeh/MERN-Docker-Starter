@@ -227,11 +227,15 @@ export const getUserProfile = asyncHandler(async (req, res, next) => {
 export const updateUserProfile = asyncHandler(async (req, res, next) => {
   const { error } = User.validateUserProfile(req.body);
   if (error) return next(errorHandler(400, error.details[0].message));
-  let updateFields = { ...req.body };
+  const allowedFields = ['firstname','lastname','phone'];
+  const updateFields = _.pick(req.body, allowedFields);
 
   const updatedUser = await User.findByIdAndUpdate(req.user._id, updateFields, {
     new: true,
   });
+    if (!updatedUser) {
+    return next(errorHandler(404, 'User not found'));
+  }
   const { password, ...rest } = updatedUser._doc;
   res
     .status(200)

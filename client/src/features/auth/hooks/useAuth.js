@@ -7,6 +7,7 @@ import {
   signOut,
   forgotPassword,
   resetPassword,
+  updateProfile,
   clearAuth,
 } from "../redux/authSlice";
 
@@ -68,6 +69,12 @@ export const useAuth = () => {
     [dispatch]
   );
 
+  const updateMyProfile =useCallback(
+    async( payload)=>{
+      await dispatch(updateProfile(payload))
+    },[dispatch]
+  )
+
   const clearAuthMessages = useCallback(() => {
     dispatch(clearAuth());
   }, [dispatch]);
@@ -85,6 +92,7 @@ export const useAuth = () => {
     logout,
     requestPasswordResetLink,
     resetUserPassword,
+    updateMyProfile,
     clearAuthMessages,
   };
 };

@@ -14,6 +14,7 @@ import SignIn from "../../features/auth/pages/SignIn";
 import SignUp from "../../features/auth/pages/SignUp";
 import ForgotPassword from "../../features/auth/pages/ForgotPassword";
 import ResetPassword from "../../features/auth/pages/ResetPassword";
+import MyProfile from "../../features/auth/pages/MyProfile";
 function AppRouter() {
   return (
     <Router>
@@ -34,7 +35,7 @@ function AppRouter() {
             <Route element={<PrivateRoutesLayout />}>
               {/* Add private routes here */}
               <Route path="/dashboard" element={<div>Dashboard</div>} />
-              <Route path="/profile" element={<div>Profile</div>} />
+              <Route path="/profile" element={<MyProfile/>} />
               <Route element={<AllowedRolesWrapper allowedRoles={["admin"]} />} >
                 <Route path="/admin" element={<div>Admin Page</div>} />
                 <Route path="/user" element={<div>User Page</div>} />
