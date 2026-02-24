@@ -38,13 +38,12 @@ function ResetPasswordPage() {
         console.log("Token validation response:", response);
         if (response && response.success !== undefined) {
           setIsTokenValid(true);
-        } else {
-          setErrorMessage(
-            response.message || "Invalid or expired token. Please try again."
-          );
         }
       } catch (error) {
-        setErrorMessage(error.message || "Invalid or expired token.");
+        const serverMessage =
+          error.response?.data?.message || "Invalid or expired token.";
+        setErrorMessage(serverMessage);
+        console.error("Validation error:", serverMessage);
       } finally {
         setLoading(false);
       }

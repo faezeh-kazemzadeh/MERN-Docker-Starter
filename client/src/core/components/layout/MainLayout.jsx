@@ -1,11 +1,22 @@
-import React, {useEffect} from "react";
-import { Outlet } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../../features/auth/hooks/useAuth";
 import Header from "../Header";
-import Footer from "../Footer"; 
+import Footer from "../Footer";
 function MainLayout() {
-    useEffect(() => {
-        document.title = "Home - Your App Name";
-    }, []);
+  const { clearAuthMessages } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    document.title = "Home - Your App Name";
+  }, []);
+
+  useEffect(() => {
+    clearAuthMessages();
+    return () => {
+      clearAuthMessages();
+    };
+  }, [location.pathname, clearAuthMessages]);
   return (
     <>
       <Header />

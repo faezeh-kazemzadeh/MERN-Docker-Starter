@@ -25,7 +25,7 @@ export const signIn = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Sign in failed");
     }
-  }
+  },
 );
 
 export const signUp = createAsyncThunk(
@@ -35,9 +35,11 @@ export const signUp = createAsyncThunk(
       const data = await signUpService(userData);
       return data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Sign up failed");
+      const errorMessage =
+        error.response?.data?.message || error.message || "Sign up failed";
+      return rejectWithValue(errorMessage);
     }
-  }
+  },
 );
 
 export const updateProfile = createAsyncThunk(
@@ -47,9 +49,11 @@ export const updateProfile = createAsyncThunk(
       const response = await updateProfileService(credentials);
       return response;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Profile update failed");
+      return rejectWithValue(
+        error.response?.data?.message || "Profile update failed",
+      );
     }
-  }
+  },
 );
 
 export const signOut = createAsyncThunk(
@@ -59,12 +63,14 @@ export const signOut = createAsyncThunk(
       await signOutService();
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
-      dispatch(authSlice.actions.clearAuth());
-      return { message: "Logout successful." }; // ارسال یک پیام موفقیت
+      // dispatch(authSlice.actions.clearAuth());
+      return { message: "Logout successful." };
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Sign out failed");
+      return rejectWithValue(
+        error.response?.data?.message || "Sign out failed",
+      );
     }
-  }
+  },
 );
 
 export const forgotPassword = createAsyncThunk(
@@ -74,9 +80,11 @@ export const forgotPassword = createAsyncThunk(
       const response = await forgotPasswordService(email);
       return response;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Forgot password failed");
+      return rejectWithValue(
+        error.response?.data?.message || "Forgot password failed",
+      );
     }
-  }
+  },
 );
 
 export const resetPassword = createAsyncThunk(
@@ -87,9 +95,11 @@ export const resetPassword = createAsyncThunk(
       const response = await resetPasswordService(credentials);
       return response;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Reset password failed");
+      return rejectWithValue(
+        error.response?.data?.message || "Reset password failed",
+      );
     }
-  }
+  },
 );
 
 const authSlice = createSlice({

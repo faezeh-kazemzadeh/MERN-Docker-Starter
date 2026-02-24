@@ -17,46 +17,52 @@ export const useAuth = () => {
   const location = useLocation();
 
   const { currentUser, error, isLoading, successMessage } = useSelector(
-    (state) => state.auth
+    (state) => state.auth,
   );
 
   const isAuthenticated = !!currentUser;
-  const userId = currentUser ? currentUser._id : null;
+  const userId = currentUser?.id || currentUser?._id || null;
+
   const authStatus = isLoading
     ? "loading"
     : error
-    ? "failed"
-    : successMessage
-    ? "succeeded"
-    : "idle";
+      ? "failed"
+      : successMessage
+        ? "succeeded"
+        : "idle";
   const authError = error?.message || error || null;
   const authSuccessMessage = successMessage || null;
 
   const login = useCallback(
     async (credentials) => {
-      await dispatch(signIn(credentials));
+      const result = await dispatch(signIn(credentials)).unwrap();
+
+      const from = location.state?.from?.pathname || "/dashboard";
+      navigate(from, { replace: true });
+      return result;
     },
-    [dispatch]
+    [dispatch, navigate, location],
   );
 
-  const register = useCallback(
-    async (credentials) => {
-      await dispatch(signUp(credentials));
-    },
-    [dispatch]
-  );
+  // const register = useCallback(
+  //   async (credentials) => {
+  //     return await dispatch(signUp(credentials)).unwrap();
+  //   },
+  //   [dispatch]
+  // );
 
   const logout = useCallback(async () => {
     await dispatch(signOut());
+    dispatch(clearAuth());
     navigate("/signin", { replace: true });
   }, [dispatch]);
 
-  const requestPasswordResetLink = useCallback(
-    async (email) => {
-      await dispatch(forgotPassword(email));
-    },
-    [dispatch]
-  );
+  // const requestPasswordResetLink = useCallback(
+  //   async (email) => {
+  //     return await dispatch(forgotPassword(email)).unwrap();
+  //   },
+  //   [dispatch]
+  // );
 
   const resetUserPassword = useCallback(
     async (credentials) => {
@@ -64,33 +70,35 @@ export const useAuth = () => {
         token: credentials.token,
         newPassword: credentials.newPassword,
       };
-      await dispatch(resetPassword(payload));
+      return await dispatch(resetPassword(payload)).unwrap();
     },
-    [dispatch]
+    [dispatch],
   );
 
-  const updateMyProfile =useCallback(
-    async( payload)=>{
-      await dispatch(updateProfile(payload))
-    },[dispatch]
-  )
+  const updateMyProfile = useCallback(
+    async (payload) => {
+      return await dispatch(updateProfile(payload)).unwrap();
+    },
+    [dispatch],
+  );
 
   const clearAuthMessages = useCallback(() => {
     dispatch(clearAuth());
   }, [dispatch]);
 
-  
   return {
     currentUser,
     isAuthenticated,
     userId,
+    isLoading,
     authStatus,
     authError,
     authSuccessMessage,
     login,
-    register,
+    register: (creds) => dispatch(signUp(creds)).unwrap(),
     logout,
-    requestPasswordResetLink,
+    requestPasswordResetLink: (email) =>
+      dispatch(forgotPassword(email)).unwrap(),
     resetUserPassword,
     updateMyProfile,
     clearAuthMessages,

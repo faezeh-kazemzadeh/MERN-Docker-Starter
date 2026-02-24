@@ -15,36 +15,70 @@ import SignUp from "../../features/auth/pages/SignUp";
 import ForgotPassword from "../../features/auth/pages/ForgotPassword";
 import ResetPassword from "../../features/auth/pages/ResetPassword";
 import MyProfile from "../../features/auth/pages/MyProfile";
+import Dashboard from "../../features/dashboard/Dashboard";
+import AdminLayout from "../components/layout/AdminLayout";
+import UserLayout from "../components/layout/UserLayout";
+
 function AppRouter() {
   return (
     <Router>
       <Suspense fallback={<div>Loading...</div>}>
         <Routes>
           <Route path="/" element={<MainLayout />}>
-            <Route index path="/" element={<Home />} />
-            <Route path="/unauthorized" element={<UnAuthorized />} />
+            <Route index element={<Home />} />
+            <Route path="unauthorized" element={<UnAuthorized />} />
+            <Route path="about" element={<About />} />
+
             <Route element={<PublicRoutesLayout />}>
-              <Route path="/signin" element={<SignIn />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route
-                path="/reset-password/:token"
-                element={<ResetPassword />}
-              />
+              <Route path="signin" element={<SignIn />} />
+              <Route path="signup" element={<SignUp />} />
+              <Route path="forgot-password" element={<ForgotPassword />} />
+              <Route path="reset-password/:token" element={<ResetPassword />} />
             </Route>
             <Route element={<PrivateRoutesLayout />}>
               {/* Add private routes here */}
-              <Route path="/dashboard" element={<div>Dashboard</div>} />
-              <Route path="/profile" element={<MyProfile/>} />
-              <Route element={<AllowedRolesWrapper allowedRoles={["admin"]} />} >
-                <Route path="/admin" element={<div>Admin Page</div>} />
-                <Route path="/user" element={<div>User Page</div>} />
+              <Route
+                element={
+                  <AllowedRolesWrapper allowedRoles={["admin", "user"]} />
+                }
+              >
+                <Route path="profile" element={<MyProfile />} />
+                <Route path="dashboard">
+                  <Route index element={<Dashboard />} />
+
+                  <Route
+                    element={<AllowedRolesWrapper allowedRoles={["admin"]} />}
+                  >
+                    <Route element={<AdminLayout />}>
+                      <Route path="user">
+                        <Route index element={<div>Users List</div>} />
+                        <Route path=":id" element={<div>User Detail</div>} />
+                      </Route>
+                    </Route>
+                  </Route>
+                  <Route
+                    element={<AllowedRolesWrapper allowedRoles={["user"]} />}
+                  >
+                    <Route element={<UserLayout />}>
+                      {/* Add user-specific routes here */}
+                      <Route path="orders">
+                        <Route
+                          path="my-orders"
+                          element={<div>Orders List</div>}
+                        />
+                        <Route
+                          path="settings"
+                          element={<div>Settings Page</div>}
+                        />
+                      </Route>
+                    </Route>
+                  </Route>
+                </Route>
               </Route>
             </Route>
             {/* Add other routes here */}
-            <Route path="/about" element={<About />} />
             <Route path="*" element={<NotFound />} />
-            <Route path="/redirect" element={<Navigate to="/" replace />} />
+            <Route path="redirect" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
       </Suspense>

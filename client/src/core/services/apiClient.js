@@ -1,16 +1,12 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "",
+  baseURL: "http://localhost:5000/api",
   headers: {
     "Content-Type": "application/json",
   },
 });
-const noRetryUrls = [
-  "/auth/signin",
-  "/auth/signup",
-  "/auth/signout",
-];
+const noRetryUrls = ["/auth/signin", "/auth/signup", "/auth/signout"];
 api.interceptors.request.use(
   (config) => {
     if (config.data instanceof FormData) {
@@ -18,10 +14,10 @@ api.interceptors.request.use(
     } else {
       config.headers["Content-Type"] = "application/json";
     }
-    config.shouldRetry = !noRetryUrls.includes(config.url)
+    config.shouldRetry = !noRetryUrls.includes(config.url);
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 api.interceptors.response.use(
@@ -29,7 +25,11 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response.status === 401 && !originalRequest._retry && originalRequest.shouldRetry) {
+    if (
+      error.response.status === 401 &&
+      !originalRequest._retry &&
+      originalRequest.shouldRetry
+    ) {
       originalRequest._retry = true;
       try {
         const res = await api.post("/auth/refresh-token");
@@ -39,8 +39,15 @@ api.interceptors.response.use(
         return Promise.reject(error);
       }
     }
+
+    if (error.response?.status === 403) {
+      console.error(
+        "Access Denied: You don't have permission for this action.",
+      );
+      window.location.href = "/unauthorized";
+    }
     return Promise.reject(error);
-  }
+  },
 );
 export default api;
 export const setBaseURL = (url) => {

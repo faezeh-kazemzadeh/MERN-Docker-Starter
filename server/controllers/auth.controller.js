@@ -17,17 +17,17 @@ export const signup = asyncHandler(async (req, res, next) => {
   if (user) return next(errorHandler(400, "User exist"));
 
   user = new User(
-    _.pick(req.body, ["firstname", "lastname", "email", "password", "phone"])
+    _.pick(req.body, ["firstname", "lastname", "email", "password", "phone"]),
   );
   await user.save();
 
-      generateTokens(res, { _id: user._id, role: user.roles });
-    const { password: pass, ...userDetails } = user._doc;
-    res.status(200).json({
-      success: true,
-      message: "Registration successful! You are now logged in.",
-      user: userDetails,
-    });
+  generateTokens(res, { _id: user._id, role: user.roles });
+  const { password: pass, ...userDetails } = user._doc;
+  res.status(200).json({
+    success: true,
+    message: "Registration successful! You are now logged in.",
+    user: userDetails,
+  });
 });
 
 //  @Destination    Authenticate User
@@ -35,10 +35,12 @@ export const signup = asyncHandler(async (req, res, next) => {
 //  @Access         Public
 export const signin = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
-  const validUser = await User.findOne({ email });
-    
+  const validUser = await User.findOne({ email }).select("+password");
+
   if (!validUser) {
-    return next(errorHandler(401, "Please provide a valid email address and password."));
+    return next(
+      errorHandler(401, "Please provide a valid email address and password."),
+    );
   }
 
   if (validUser.isDeleted) {
@@ -53,14 +55,13 @@ export const signin = asyncHandler(async (req, res, next) => {
   if (!isPasswordValid) {
     return next(errorHandler(401, "Invalid email or password"));
   }
-    generateTokens(res, { _id: validUser._id, role: validUser.roles });
-    const { password: pass, ...userDetails } = validUser._doc;
-    res.status(200).json({
-      success: true,
-      message: "Login successful",
-      user: userDetails,
-    });
-  
+  generateTokens(res, { _id: validUser._id, role: validUser.roles });
+  const { password: pass, ...userDetails } = validUser._doc;
+  res.status(200).json({
+    success: true,
+    message: "Login successful",
+    user: userDetails,
+  });
 });
 
 //  @Destination    Logout User
@@ -89,7 +90,7 @@ export const signout = asyncHandler(async (req, res) => {
 //  @Route          POST /api/auth/refreshtoken
 //  @Access         Public
 export const refreshToken = asyncHandler(async (req, res) => {
-  const {_id} = req.user;
+  const { _id } = req.user;
 
   const user = await User.findById(_id);
   if (!user) return next(errorHandler(404, "User not found"));
@@ -98,23 +99,24 @@ export const refreshToken = asyncHandler(async (req, res) => {
 
   generateTokens(res, { _id: user._id, role: user.roles });
 
-  res.status(200).json({ message: "Tokens refreshed successfully" });
+  res
+    .status(200)
+    .json({ success: true, message: "Tokens refreshed successfully" });
 });
 
 //  @Destination    Forgot Password
 //  @Route          POST /api/auth/forgot-password
 //  @Access         Public
 export const forgotPassword = asyncHandler(async (req, res, next) => {
-  
-   if (!req.body.email) {
+  if (!req.body.email) {
     return next(errorHandler(400, "Email address is required."));
   }
   if (!req.body.email.includes("@")) {
     return next(errorHandler(400, "Please provide a valid email address."));
   }
-  const {email} = req.body;
-  
-  const user = await User.findOne({ email});
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
   if (!user) {
     return next(errorHandler(404, "User not found"));
   }
@@ -127,9 +129,11 @@ export const forgotPassword = asyncHandler(async (req, res, next) => {
   }
   const resetToken = user.getResetPasswordToken();
   await user.save({ validateBeforeSave: false });
-  const resetURL = `${req.protocol}://${req.get(
-    "host"
-  )}/reset-password/${resetToken}`;
+  // افزودن آدرس فرانت‌اند به لینک ریست پسورد : در صورتیکه هر دو سرور و فرانت‌اند در یک دامنه باشند، می‌توان از req.get("host") استفاده کرد. اما در صورتیکه فرانت‌اند در دامنه‌ای جداگانه باشد، باید آدرس فرانت‌اند را از متغیرهای محیطی (مانند FRONTEND_URL) خواند.
+  // const resetURL = `${req.protocol}://${req.get(
+  //   "host",
+  // )}/reset-password/${resetToken}`;
+  const resetURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
   const message = `  <div style="font-family: Arial, sans-serif; font-size: 16px; color: #333333; line-height: 1.6;">
       <h2 style="color: #0056b3;">Password Reset Request</h2>
       <p>Hello,</p>
@@ -157,7 +161,7 @@ export const forgotPassword = asyncHandler(async (req, res, next) => {
       subject: "Password reset Token",
       message,
     });
-    res.status(200).json({ success: true , message: "Email sent successfully" });
+    res.status(200).json({ success: true, message: "Email sent successfully" });
   } catch (err) {
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
@@ -171,13 +175,13 @@ export const forgotPassword = asyncHandler(async (req, res, next) => {
 //  @Access          Public
 export const validateToken = asyncHandler(async (req, res, next) => {
   const { token } = req.params;
-console.log("Validating token:", token);
+
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
   const user = await User.findOne({
     resetPasswordToken: hashedToken,
-    resetPasswordExpires: { $gt: Date.now() - 10 * 60 * 1000 }, // بررسی زمان انقضا
-  });
+    resetPasswordExpires: { $gt: Date.now() }, // بررسی زمان انقضا
+  }).select("+resetPasswordToken +resetPasswordExpires");
 
   if (!user) {
     return next(errorHandler(400, "Invalid or expired token"));
@@ -186,8 +190,8 @@ console.log("Validating token:", token);
   if (!user.active || user.isDeleted) {
     return next(errorHandler(403, "User account is not valid"));
   }
-  
-  res.status(200).json({success:true, message: "Token is valid" });
+
+  res.status(200).json({ success: true, message: "Token is valid" });
 });
 
 //  @Destination     Reset Password
@@ -200,8 +204,9 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
     .digest("hex");
   const user = await User.findOne({
     resetPasswordToken,
-    resetPasswordExpires: { $gt: Date.now() - 10 * 60 * 1000 },
-  });
+    resetPasswordExpires: { $gt: Date.now() },
+  }).select("+resetPasswordToken +resetPasswordExpires +password");
+
   if (!user) return next(errorHandler(400, "Invalid Token"));
 
   user.password = req.body.password;
@@ -227,17 +232,20 @@ export const getUserProfile = asyncHandler(async (req, res, next) => {
 export const updateUserProfile = asyncHandler(async (req, res, next) => {
   const { error } = User.validateUserProfile(req.body);
   if (error) return next(errorHandler(400, error.details[0].message));
-  const allowedFields = ['firstname','lastname','phone'];
+  const allowedFields = ["firstname", "lastname", "phone"];
   const updateFields = _.pick(req.body, allowedFields);
 
   const updatedUser = await User.findByIdAndUpdate(req.user._id, updateFields, {
     new: true,
+    runValidators: true,
   });
-    if (!updatedUser) {
-    return next(errorHandler(404, 'User not found'));
+  if (!updatedUser) {
+    return next(errorHandler(404, "User not found"));
   }
-  const { password, ...rest } = updatedUser._doc;
-  res
-    .status(200)
-    .json({ success: true, message: "Profile Update successful", user: rest });
+
+  res.status(200).json({
+    success: true,
+    message: "Profile Update successful",
+    user: updatedUser,
+  });
 });

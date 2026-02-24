@@ -1,24 +1,21 @@
-import React , {useEffect} from 'react'
-import { Outlet, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../features/auth/hooks/useAuth';
+import React, { useEffect } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "../../../features/auth/hooks/useAuth";
 
 function PrivateRoutesLayout() {
-    const { isAuthenticated } = useAuth();
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        if (!isAuthenticated) {
-            navigate("/signin", { replace: true });
-        }
-    }, [isAuthenticated, navigate]);
-
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  useEffect(() => {
     if (!isAuthenticated) {
-        return null;
+      navigate("/signin", { replace: true });
     }
+  }, [isAuthenticated, navigate]);
 
-  return (
-    <><Outlet/></>
-  )
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  return <Outlet />;
 }
 
-export default PrivateRoutesLayout
+export default PrivateRoutesLayout;

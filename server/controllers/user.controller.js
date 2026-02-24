@@ -78,6 +78,13 @@ export const activateUser = asyncHandler(async (req, res, next) => {
 //  @Access         requiredRoles: ["Admin"]
 export const deleteUser = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
+
+  if (req.user._id.toString() === id) {
+    return next(
+      errorHandler(400, "You cannot delete your own account, Admin!"),
+    );
+  }
+
   const user = await deleteUserService(id);
   res.status(200).json({
     success: true,

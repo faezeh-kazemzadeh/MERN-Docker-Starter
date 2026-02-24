@@ -34,24 +34,25 @@ const UserSchema = mongoose.Schema(
       maxlength: 100,
       trim: true,
       required: true,
+      select: false,
     },
     roles: {
       type: [String],
       enum: ["admin", "user", "editor"],
-      default: "user",
+      default: ["user"],
     },
     active: {
       type: Boolean,
       default: true,
     },
     isDeleted: {
-  type: Boolean,
-  default: false,
-},
-    resetPasswordToken: String,
-    resetPasswordExpires: Date,
+      type: Boolean,
+      default: false,
+    },
+    resetPasswordToken: { type: String, select: false },
+    resetPasswordExpires: { type: Date, select: false },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 UserSchema.statics.validateUser = (user) => {
@@ -60,9 +61,7 @@ UserSchema.statics.validateUser = (user) => {
     lastname: Joi.string().min(3).max(150),
     phone: Joi.string(),
     email: Joi.string().min(12).max(250).required().email(),
-    roles: Joi.array().items(
-      Joi.string().valid("admin", "user", "editor")
-    ),
+    roles: Joi.array().items(Joi.string().valid("admin", "user", "editor")),
     password: joiPassword
       .string()
       .minOfSpecialCharacters(1)
@@ -85,12 +84,12 @@ UserSchema.statics.validateUser = (user) => {
         "password.onlyLatinCharacters":
           "{#label} should contain only latin characters",
       }),
-    // confirmPassword: Joi.string()
-    //   .valid(Joi.ref("password")) 
-    //   .required()
-    //   .messages({
-    //     "any.only": "Passwords do not match",
-    //   }),
+    confirmPassword: Joi.string()
+      .valid(Joi.ref("password"))
+      .required()
+      .messages({
+        "any.only": "Passwords do not match",
+      }),
   });
   return schema.validate(user, { abortEarly: false });
 };
@@ -100,7 +99,6 @@ UserSchema.statics.validateUserProfile = (user) => {
     firstname: Joi.string().min(3).max(150),
     lastname: Joi.string().min(3).max(150),
     phone: Joi.string(),
-    
   });
   return schema.validate(user, { abortEarly: false });
 };
@@ -114,13 +112,14 @@ UserSchema.pre("save", async function (next) {
   next();
 });
 
-UserSchema.methods.getResetPasswordToken = function(){
-  
-  const resetToken = crypto.randomBytes(20).toString('hex');
-  this.resetPasswordToken= crypto.createHash('sha256').update(resetToken).digest('hex')
-  this.resetPasswordExpires = Date.now() + 10 * 60 * 1000 
+UserSchema.methods.getResetPasswordToken = function () {
+  const resetToken = crypto.randomBytes(20).toString("hex");
+  this.resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+  this.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
   return resetToken;
-}
+};
 
 export const User = mongoose.model("User", UserSchema);
-

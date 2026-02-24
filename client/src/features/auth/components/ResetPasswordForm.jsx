@@ -1,23 +1,25 @@
 import React, { useEffect } from "react";
 import { useFormik } from "formik";
 import { useAuth } from "../hooks/useAuth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { clearAuth } from "../redux/authSlice";
 import { useDispatch } from "react-redux";
 import { resetPasswordSchema } from "../utils/authValidators";
 
 function ResetPasswordForm({ token }) {
-  const { resetUserPassword, authStatus, authError, authSuccessMessage } =
+  // const {  } = useParams();
+  const { resetUserPassword, isLoading, authError, authSuccessMessage } =
     useAuth();
-  const isLoading = authStatus === "loading";
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
   useEffect(() => {
     if (authSuccessMessage) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         dispatch(clearAuth());
         navigate("/signin");
       }, 3000);
+      return () => clearTimeout(timer);
     }
   }, [authSuccessMessage, navigate, dispatch]);
   const formik = useFormik({
@@ -28,7 +30,11 @@ function ResetPasswordForm({ token }) {
     },
     validationSchema: resetPasswordSchema,
     onSubmit: async (values) => {
-      await resetUserPassword(values);
+      try {
+        await resetUserPassword(values);
+      } catch (error) {
+        console.error("Password reset error:", error);
+      }
     },
   });
 
