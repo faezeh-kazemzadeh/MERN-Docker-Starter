@@ -1,12 +1,6 @@
-import React from 'react'
-import usePageTitle from '../hooks/usePageTitle';
+import React from "react";
 function Home() {
-  usePageTitle("Home");
-  return (
-    <div>
-      Home Page
-    </div>
-  )
+  return <div>Home Page</div>;
 }
 
-export default Home
+export default Home;

@@ -1,100 +1,79 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../features/auth/hooks/useAuth";
-import { Link } from "react-router-dom";
-import {
-  FaUserCircle,
-  FaBars,
-  FaTimes,
-  FaChevronDown,
-  FaChevronUp,
-} from "react-icons/fa";
+import { Link, useLocation } from "react-router-dom";
+import { FaBars, FaTimes, FaChevronDown } from "react-icons/fa";
+import UserMenu from "./common/UserMenu";
 
 const Navbar = () => {
   const { isAuthenticated, logout, currentUser } = useAuth();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isArticlesSubmenuOpen, setIsArticlesSubmenuOpen] = useState(false); // State برای زیرمنو
-  const dropdownRef = useRef(null);
-
-  const handleLogout = async () => {
-    await logout();
-    setIsDropdownOpen(false);
-  };
-
-  const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
-    setIsArticlesSubmenuOpen(false); // بستن زیرمنو هنگام باز کردن منوی کاربری
-  };
-
-  const toggleArticlesSubmenu = () => {
-    setIsArticlesSubmenuOpen(!isArticlesSubmenuOpen);
-  };
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-    setIsArticlesSubmenuOpen(false); // بستن زیرمنو هنگام بستن منوی موبایل
-  };
+  const [isArticlesOpen, setIsArticlesOpen] = useState(false);
+  const location = useLocation();
+  const navRef = useRef(null);
 
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
+    const handleClickOutside = (event) => {
+      if (navRef.current && !navRef.current.contains(event.target)) {
+        setIsMobileMenuOpen(false);
+        setIsArticlesOpen(false);
       }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [dropdownRef]);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   return (
-    <nav className="bg-gray-800 p-4 text-white relative">
-      <div className="container mx-auto flex justify-between items-center">
-        <div className="flex items-center space-x-6">
-          <Link to="/" className="text-xl font-bold">
-            My App
+    <nav
+      ref={navRef}
+      className="bg-white border-b border-slate-200 h-16 sticky top-0 z-[100] shadow-sm"
+    >
+      <div className="mx-auto flex justify-between items-center h-full px-6">
+        {/* سمت چپ: برند و لینک‌ها */}
+        <div className="flex items-center space-x-8 h-full">
+          <Link
+            to="/"
+            className="text-xl font-black tracking-tighter text-blue-600"
+          >
+            MYAPP<span className="text-slate-800">.</span>
           </Link>
 
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden md:flex items-center space-x-6 text-sm font-semibold h-full">
             <Link
               to="/products"
-              className="hover:text-gray-300 transition-colors duration-200"
+              className="text-slate-500 hover:text-blue-600 transition-colors h-full flex items-center"
             >
               Products
             </Link>
 
-            <div className="relative">
+            {/* دراپ‌دان Articles */}
+            <div className="relative h-full flex items-center">
               <button
-                onClick={toggleArticlesSubmenu}
-                className="hover:text-gray-300 transition-colors duration-200 flex items-center"
+                onClick={() => setIsArticlesOpen(!isArticlesOpen)}
+                className={`flex items-center gap-1 transition-colors h-full ${isArticlesOpen ? "text-blue-600" : "text-slate-500 hover:text-blue-600"}`}
               >
-                Articles
-                {isArticlesSubmenuOpen ? (
-                  <FaChevronUp className="ml-1" size={12} />
-                ) : (
-                  <FaChevronDown className="ml-1" size={12} />
-                )}
+                Articles{" "}
+                <FaChevronDown
+                  size={10}
+                  className={`transition-transform duration-200 ${isArticlesOpen ? "rotate-180" : ""}`}
+                />
               </button>
-              {isArticlesSubmenuOpen && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg py-1 z-20">
+
+              {isArticlesOpen && (
+                /* تراز دقیق با لبه پایین نوبار */
+                <div className="absolute top-full left-0 w-48 bg-white border border-slate-100 rounded-b-xl shadow-xl py-2 animate-in fade-in slide-in-from-top-1">
                   <Link
                     to="/articles/category-1"
-                    className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-600"
-                    onClick={() => setIsArticlesSubmenuOpen(false)}
+                    className="block px-4 py-2 text-slate-600 hover:bg-slate-50 hover:text-blue-600"
                   >
                     Category 1
                   </Link>
                   <Link
-                    to="/articles/category-2"
-                    className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-600"
-                    onClick={() => setIsArticlesSubmenuOpen(false)}
-                  >
-                    Category 2
-                  </Link>
-                  <Link
                     to="/articles/all"
-                    className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-600"
-                    onClick={() => setIsArticlesSubmenuOpen(false)}
+                    className="block px-4 py-2 text-blue-600 font-bold hover:bg-slate-50"
                   >
                     All Articles
                   </Link>
@@ -104,183 +83,119 @@ const Navbar = () => {
 
             <Link
               to="/about"
-              className="hover:text-gray-300 transition-colors duration-200"
+              className="text-slate-500 hover:text-blue-600 transition-colors h-full flex items-center"
             >
               About Us
             </Link>
+          </div>
+        </div>
+
+        {/* سمت راست: پروفایل و موبایل */}
+        <div className="flex items-center gap-4 h-full">
+          {isAuthenticated ? (
+            <div className="hidden md:block h-full">
+              <UserMenu user={currentUser} />
+            </div>
+          ) : (
             <Link
-              to="/contact"
-              className="hover:text-gray-300 transition-colors duration-200"
+              to="/signin"
+              className="hidden md:block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-md shadow-blue-100"
             >
+              Sign In
+            </Link>
+          )}
+
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+          >
+            {isMobileMenuOpen ? <FaTimes size={22} /> : <FaBars size={22} />}
+          </button>
+        </div>
+      </div>
+
+      {/* منوی موبایل  */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 bg-slate-900 z-[150] p-6 flex flex-col animate-in slide-in-from-right duration-300">
+          <div className="flex justify-between items-center mb-10">
+            <span className="text-xl font-black text-blue-500">MYAPP.</span>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="text-slate-400 p-2 hover:text-white"
+            >
+              <FaTimes size={28} />
+            </button>
+          </div>
+
+          <div className="flex flex-col space-y-6">
+            <Link to="/products" className="text-xl text-slate-300 font-medium">
+              Products
+            </Link>
+
+            <div>
+              <button
+                onClick={() => setIsArticlesOpen(!isArticlesOpen)}
+                className="flex justify-between items-center w-full text-xl text-slate-300"
+              >
+                Articles{" "}
+                <FaChevronDown
+                  size={16}
+                  className={isArticlesOpen ? "rotate-180" : ""}
+                />
+              </button>
+              {isArticlesOpen && (
+                <div className="mt-4 ml-4 space-y-4 border-l border-slate-700 pl-4 animate-in fade-in duration-300">
+                  <Link
+                    to="/articles/all"
+                    className="block text-blue-400 text-lg"
+                  >
+                    All Articles
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            <Link to="/about" className="text-xl text-slate-300 font-medium">
+              About Us
+            </Link>
+            <Link to="/contact" className="text-xl text-slate-300 font-medium">
               Contact
             </Link>
-          </div>
-        </div>
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={toggleMobileMenu}
-            className="md:hidden text-white focus:outline-none"
-          >
-            {isMobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-          </button>
-          <div className="relative hidden md:block" ref={dropdownRef}>
+
+            <div className="h-px bg-slate-800 w-full my-4"></div>
+
             {isAuthenticated ? (
-              <div className="flex items-center space-x-4">
-                <span className="mr-2">
-                  Welcome, {currentUser.firstname || currentUser.email}!
-                </span>
-                <div className="relative">
-                  <button
-                    onClick={toggleDropdown}
-                    className="focus:outline-none"
-                  >
-                    <FaUserCircle
-                      size={30}
-                      className="text-gray-400 hover:text-white transition duration-300"
-                    />
-                  </button>
-                  {isDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg py-1 z-10">
-                      <Link
-                        to="/profile"
-                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-600"
-                        onClick={() => setIsDropdownOpen(false)}
-                      >
-                        Profile
-                      </Link>
-                      <Link
-                        to="/dashboard"
-                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-600"
-                        onClick={() => setIsDropdownOpen(false)}
-                      >
-                        Dashboard
-                      </Link>
-                      <div className="border-t border-gray-600 my-1"></div>
-                      <button
-                        onClick={handleLogout}
-                        className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-600"
-                      >
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
+              <div className="flex flex-col space-y-6">
+                <Link
+                  to="/dashboard/profile"
+                  className="text-xl text-slate-300 font-medium"
+                >
+                  Profile
+                </Link>
+                <Link
+                  to="/dashboard"
+                  className="text-xl text-slate-300 font-medium"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={() => {
+                    logout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="text-xl text-rose-500 font-bold text-left"
+                >
+                  Logout
+                </button>
               </div>
             ) : (
-              <div className="space-x-4">
-                <Link to="/signin" className="hover:text-gray-300">
-                  Sign In
-                </Link>
-              </div>
+              <Link to="/signin" className="text-xl text-blue-500 font-bold">
+                Sign In
+              </Link>
             )}
           </div>
         </div>
-      </div>
-
-      <div
-        className={`md:hidden absolute top-full left-0 right-0 bg-gray-800 p-4 transition-all duration-300 z-50 ${isMobileMenuOpen ? "opacity-100 h-auto" : "opacity-0 h-0 overflow-hidden"}`}
-      >
-        <Link
-          to="/products"
-          className="block py-2 hover:bg-gray-700"
-          onClick={() => {
-            setIsMobileMenuOpen(false);
-            setIsArticlesSubmenuOpen(false);
-          }}
-        >
-          Products
-        </Link>
-
-        <div className="block py-2">
-          <button
-            onClick={toggleArticlesSubmenu}
-            className="flex items-center w-full justify-between hover:bg-gray-700 p-2 rounded"
-          >
-            <span>Articles</span>
-            {isArticlesSubmenuOpen ? (
-              <FaChevronUp size={12} />
-            ) : (
-              <FaChevronDown size={12} />
-            )}
-          </button>
-          {isArticlesSubmenuOpen && (
-            <div className="pl-4 border-l border-gray-600 mt-2">
-              <Link
-                to="/articles/category-1"
-                className="block py-2 hover:bg-gray-700"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Category 1
-              </Link>
-              <Link
-                to="/articles/category-2"
-                className="block py-2 hover:bg-gray-700"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Category 2
-              </Link>
-              <Link
-                to="/articles/all"
-                className="block py-2 hover:bg-gray-700"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                All Articles
-              </Link>
-            </div>
-          )}
-        </div>
-
-        <Link
-          to="/about"
-          className="block py-2 hover:bg-gray-700"
-          onClick={() => setIsMobileMenuOpen(false)}
-        >
-          About Us
-        </Link>
-        <Link
-          to="/contact"
-          className="block py-2 hover:bg-gray-700"
-          onClick={() => setIsMobileMenuOpen(false)}
-        >
-          Contact
-        </Link>
-        <div className="border-t border-gray-700 my-2"></div>
-        {isAuthenticated ? (
-          <>
-            <Link
-              to="/profile"
-              className="block py-2 hover:bg-gray-700"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Profile
-            </Link>
-            <Link
-              to="/dashboard"
-              className="block py-2 hover:bg-gray-700"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Dashboard
-            </Link>
-            <button
-              onClick={() => {
-                handleLogout();
-                setIsMobileMenuOpen(false);
-              }}
-              className="block w-full text-left py-2 text-red-400 hover:bg-gray-700"
-            >
-              Logout
-            </button>
-          </>
-        ) : (
-          <Link
-            to="/signin"
-            className="block py-2 hover:bg-gray-700"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Sign In
-          </Link>
-        )}
-      </div>
+      )}
     </nav>
   );
 };

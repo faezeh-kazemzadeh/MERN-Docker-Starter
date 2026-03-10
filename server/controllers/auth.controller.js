@@ -7,6 +7,7 @@ import { User } from "../models/user.model.js";
 import { errorHandler } from "../utils/error.js";
 import { generateTokens } from "../utils/token.js";
 import { sendEmail } from "../utils/sendEmail.js";
+import { RefreshToken } from "../models/refreshToken.model.js";
 //  @Destination    Register User
 //  @Route          POST /api/users/signup
 //  @Access         Public
@@ -21,7 +22,7 @@ export const signup = asyncHandler(async (req, res, next) => {
   );
   await user.save();
 
-  generateTokens(res, { _id: user._id, role: user.roles });
+  await generateTokens(res, user);
   const { password: pass, ...userDetails } = user._doc;
   res.status(200).json({
     success: true,
@@ -36,6 +37,7 @@ export const signup = asyncHandler(async (req, res, next) => {
 export const signin = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
   const validUser = await User.findOne({ email }).select("+password");
+  console.log("User Roles from DB:", validUser);
 
   if (!validUser) {
     return next(
@@ -55,7 +57,7 @@ export const signin = asyncHandler(async (req, res, next) => {
   if (!isPasswordValid) {
     return next(errorHandler(401, "Invalid email or password"));
   }
-  generateTokens(res, { _id: validUser._id, role: validUser.roles });
+  await generateTokens(res, validUser);
   const { password: pass, ...userDetails } = validUser._doc;
   res.status(200).json({
     success: true,
@@ -68,42 +70,49 @@ export const signin = asyncHandler(async (req, res, next) => {
 //  @Route          POST /api/users/signout
 //  @Access         Public
 export const signout = asyncHandler(async (req, res) => {
-  res.clearCookie("access_token", {
+  const refreshToken = req.cookies.refresh_token;
+  if (refreshToken) {
+    const hashed = crypto
+      .createHash("sha256")
+      .update(refreshToken)
+      .digest("hex");
+    await RefreshToken.deleteOne({ token: hashed });
+  }
+  const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV !== "development",
     sameSite: "strict",
-  });
+  };
 
-  res.clearCookie("refresh_token", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV !== "development",
-    sameSite: "strict",
-  });
-
-  res.status(200).json({
-    success: true,
-    message: "Signed out successfully",
-  });
+  res.clearCookie("access_token", cookieOptions);
+  res.clearCookie("refresh_token", cookieOptions);
+  res.status(200).json({ success: true, message: "Logged out" });
 });
 
 //  @Destination    refreshToken
 //  @Route          POST /api/auth/refreshtoken
 //  @Access         Public
-export const refreshToken = asyncHandler(async (req, res) => {
-  const { _id } = req.user;
+export const refreshToken = asyncHandler(async (req, res, next) => {
+  const oldToken = req.cookies.refresh_token;
+  if (!oldToken) return next(errorHandler(401, "No Refresh Token"));
 
-  const user = await User.findById(_id);
-  if (!user) return next(errorHandler(404, "User not found"));
-  if (user.isDeleted) return next(errorHandler(403, "User is deleted"));
-  if (!user.active) return next(errorHandler(403, "User is not active"));
+  const hashedOld = crypto.createHash("sha256").update(oldToken).digest("hex");
+  const tokenInDB = await RefreshToken.findOne({ token: hashedOld });
 
-  generateTokens(res, { _id: user._id, role: user.roles });
+  if (!tokenInDB) return next(errorHandler(403, "Invalid Refresh Token"));
 
-  res
-    .status(200)
-    .json({ success: true, message: "Tokens refreshed successfully" });
+  const user = await User.findById(tokenInDB.user);
+  if (!user || !user.active || user.isDeleted)
+    return next(errorHandler(403, "User unavailable"));
+
+  // حذف توکن قبلی (Rotation)
+  await RefreshToken.deleteOne({ _id: tokenInDB._id });
+
+  // تولید توکن جدید و ذخیره در DB
+  const { accessToken } = await generateTokens(res, user);
+
+  res.status(200).json({ success: true, accessToken });
 });
-
 //  @Destination    Forgot Password
 //  @Route          POST /api/auth/forgot-password
 //  @Access         Public

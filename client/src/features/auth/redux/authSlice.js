@@ -13,6 +13,7 @@ const initialState = {
   error: null,
   isLoading: false,
   successMessage: null,
+  profileUpdating: false,
 };
 
 // --- Async Thunks ---
@@ -152,21 +153,18 @@ const authSlice = createSlice({
       })
       // updateProfile
       .addCase(updateProfile.pending, (state) => {
-        state.isLoading = true;
+        state.profileUpdating = true;
         state.error = null;
         state.successMessage = null;
       })
       .addCase(updateProfile.fulfilled, (state, action) => {
-        state.isLoading = false;
+        state.profileUpdating = false;
         state.currentUser = action.payload.user;
-        state.successMessage =
-          action.payload.message || "Profile updated successfully.";
-        state.error = null;
+        state.successMessage = action.payload.message;
       })
       .addCase(updateProfile.rejected, (state, action) => {
+        state.profileUpdating = false;
         state.error = action.payload;
-        state.isLoading = false;
-        state.successMessage = null;
       })
       // signOut
       .addCase(signOut.pending, (state) => {

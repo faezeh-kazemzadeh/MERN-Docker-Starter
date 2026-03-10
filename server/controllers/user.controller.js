@@ -2,120 +2,73 @@ import _ from "lodash";
 import asyncHandler from "express-async-handler";
 import {
   getUsersService,
-  getDeletedUsersService,
-  getInactiveUsersService,
-  deactivateUserService,
-  activateUserService,
-  deleteUserService,
-  restoreUserService,
+  updateUserStatusService,
   updateUserService,
 } from "../services/user.service.js";
 
 //  @Destination    Get Users List
 //  @Route          GET /api/users
 //  @Access         requiredRoles: ["Admin"]
-export const getUsersList = asyncHandler(async (req, res, next) => {
-  const users = await getUsersService();
+export const getUsersList = asyncHandler(async (req, res) => {
+  const {
+    status = "active",
+    search = "",
+    page = 1,
+    limit = 10,
+    sort = "createdAt",
+  } = req.query;
+
+  const result = await getUsersService({
+    status,
+    search,
+    page,
+    limit,
+    sort,
+  });
+
   res.status(200).json({
     success: true,
     message: "Users retrieved successfully",
-    users,
+    ...result,
   });
 });
 
-// @Destination    Get Deleted Users List
-// @Route          GET /api/users/deleted
+// @Destination    Update User Status (Delete, Restore, Activate, Deactivate)
+// @Route         PATCH /api/users/:id/status
 // @Access         requiredRoles: ["Admin"]
-export const getDeletedUsersList = asyncHandler(async (req, res, next) => {
-  const users = await getDeletedUsersService();
-  res.status(200).json({
-    success: true,
-    message: "Users retrieved successfully",
-    users,
-  });
-});
+export const updateUserStatusController = asyncHandler(
+  async (req, res, next) => {
+    const { id } = req.params;
+    const { action } = req.body;
 
-// @Destination    Get Inactive Users List
-// @Route          GET /api/users/deleted
+    const updatedUser = await updateUserStatusService(id, action);
+
+    const actionMessages = {
+      delete: "User deleted successfully",
+      restore: "User restored successfully",
+      activate: "User activated successfully",
+      deactivate: "User deactivated successfully",
+    };
+
+    res.status(200).json({
+      success: true,
+      message: actionMessages[action] || "User status updated successfully",
+      user: updatedUser,
+    });
+  },
+);
+
+// @Destination    Update User (Name, Email, Role, Active Status)
+// @Route         [PATCH] /api/users/:id
 // @Access         requiredRoles: ["Admin"]
-export const getInactiveUsersList = asyncHandler(async (req, res, next) => {
-  const users = await getInactiveUsersService();
-  res.status(200).json({
-    success: true,
-    message: "Users retrieved successfully",
-    users,
-  });
-});
-
-//  @Destination    Deactivate User
-//  @Route          PATCH /api/users/:id
-//  @Access         requiredRoles: ["Admin"]
-export const deactivateUser = asyncHandler(async (req, res, next) => {
-  const { id } = req.params;
-  const user = await deactivateUserService(id);
-  res.status(200).json({
-    success: true,
-    message: "User deactivated successfully",
-    user: user,
-  });
-});
-
-//  @Destination    Deactivate User
-//  @Route          PATCH /api/users/:id
-//  @Access         requiredRoles: ["Admin"]
-export const activateUser = asyncHandler(async (req, res, next) => {
-  const { id } = req.params;
-  const user = await activateUserService(id);
-  res.status(200).json({
-    success: true,
-    message: "User activated successfully",
-    user: user,
-  });
-});
-
-//  @Destination    Delete User
-//  @Route          PATCH /api/users/:id
-//  @Access         requiredRoles: ["Admin"]
-export const deleteUser = asyncHandler(async (req, res, next) => {
+export const updateUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  if (req.user._id.toString() === id) {
-    return next(
-      errorHandler(400, "You cannot delete your own account, Admin!"),
-    );
-  }
+  const updatedUser = await updateUserService(id, req.body);
 
-  const user = await deleteUserService(id);
-  res.status(200).json({
-    success: true,
-    message: "User deleted successfully",
-    user: user,
-  });
-});
-
-//  @Destination    Restore User
-//  @Route          Restore /api/users/:id
-//  @Access         requiredRoles: ["Admin"]
-export const restoreUser = asyncHandler(async (req, res, next) => {
-  const { id } = req.params;
-  const user = await restoreUserService(id);
-  res.status(200).json({
-    success: true,
-    message: "User restored successfully",
-    user: user,
-  });
-});
-
-//  @Destination    Put Update User
-//  @Route          PUT /api/users/:id
-//  @Access         requiredRoles: ["Admin"]
-export const updateUser = asyncHandler(async (req, res, next) => {
-  const { id } = req.params;
-  const updates = req.body;
-  const user = await updateUserService(id, updates);
   res.status(200).json({
     success: true,
     message: "User updated successfully",
-    user,
+    user: updatedUser,
   });
 });

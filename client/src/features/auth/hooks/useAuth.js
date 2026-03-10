@@ -16,9 +16,8 @@ export const useAuth = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { currentUser, error, isLoading, successMessage } = useSelector(
-    (state) => state.auth,
-  );
+  const { currentUser, error, isLoading, successMessage, profileUpdating } =
+    useSelector((state) => state.auth);
 
   const isAuthenticated = !!currentUser;
   const userId = currentUser?.id || currentUser?._id || null;
@@ -44,25 +43,11 @@ export const useAuth = () => {
     [dispatch, navigate, location],
   );
 
-  // const register = useCallback(
-  //   async (credentials) => {
-  //     return await dispatch(signUp(credentials)).unwrap();
-  //   },
-  //   [dispatch]
-  // );
-
   const logout = useCallback(async () => {
     await dispatch(signOut());
     dispatch(clearAuth());
     navigate("/signin", { replace: true });
   }, [dispatch]);
-
-  // const requestPasswordResetLink = useCallback(
-  //   async (email) => {
-  //     return await dispatch(forgotPassword(email)).unwrap();
-  //   },
-  //   [dispatch]
-  // );
 
   const resetUserPassword = useCallback(
     async (credentials) => {
@@ -102,6 +87,7 @@ export const useAuth = () => {
     resetUserPassword,
     updateMyProfile,
     clearAuthMessages,
+    profileUpdating,
   };
 };
 

@@ -1,13 +1,7 @@
-import React from 'react'
-import usePageTitle from '../hooks/usePageTitle';
+import React from "react";
 
 function About() {
-  usePageTitle("About Us"); 
-  return (
-    <div>
-      About Page
-    </div>
-  )
+  return <div>About Page</div>;
 }
 
-export default About
+export default About;

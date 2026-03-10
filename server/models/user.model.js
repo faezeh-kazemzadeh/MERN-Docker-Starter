@@ -14,6 +14,8 @@ const UserSchema = mongoose.Schema(
       maxlength: 250,
       required: true,
       unique: true,
+      lowercase: true,
+      trim: true,
     },
     firstname: {
       type: String,
@@ -27,6 +29,7 @@ const UserSchema = mongoose.Schema(
     },
     phone: {
       type: String,
+      trim: true,
     },
     password: {
       type: String,
@@ -40,6 +43,7 @@ const UserSchema = mongoose.Schema(
       type: [String],
       enum: ["admin", "user", "editor"],
       default: ["user"],
+      index: true,
     },
     active: {
       type: Boolean,
@@ -59,7 +63,7 @@ UserSchema.statics.validateUser = (user) => {
   const schema = Joi.object({
     firstname: Joi.string().min(3).max(150),
     lastname: Joi.string().min(3).max(150),
-    phone: Joi.string(),
+    phone: Joi.string().allow("", null),
     email: Joi.string().min(12).max(250).required().email(),
     roles: Joi.array().items(Joi.string().valid("admin", "user", "editor")),
     password: joiPassword
@@ -93,6 +97,18 @@ UserSchema.statics.validateUser = (user) => {
   });
   return schema.validate(user, { abortEarly: false });
 };
+UserSchema.statics.validateUserUpdate = (user) => {
+  const schema = Joi.object({
+    firstname: Joi.string().min(3).max(150),
+    lastname: Joi.string().min(3).max(150),
+    email: Joi.string().email(),
+    phone: Joi.string().allow("", null),
+    roles: Joi.array().items(Joi.string().valid("admin", "user", "editor")),
+    active: Joi.boolean(),
+  }).min(1);
+
+  return schema.validate(user, { abortEarly: false });
+};
 
 UserSchema.statics.validateUserProfile = (user) => {
   const schema = Joi.object({
@@ -105,7 +121,7 @@ UserSchema.statics.validateUserProfile = (user) => {
 
 UserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
-    next();
+    return next();
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
@@ -118,8 +134,14 @@ UserSchema.methods.getResetPasswordToken = function () {
     .createHash("sha256")
     .update(resetToken)
     .digest("hex");
-  this.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
+  const RESET_TOKEN_EXPIRE = 10 * 60 * 1000;
+  this.resetPasswordExpires = Date.now() + RESET_TOKEN_EXPIRE;
   return resetToken;
 };
 
+UserSchema.index({
+  firstname: "text",
+  lastname: "text",
+  email: "text",
+});
 export const User = mongoose.model("User", UserSchema);

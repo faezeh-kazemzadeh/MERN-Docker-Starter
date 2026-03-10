@@ -18,11 +18,15 @@ import MyProfile from "../../features/auth/pages/MyProfile";
 import Dashboard from "../../features/dashboard/Dashboard";
 import AdminLayout from "../components/layout/AdminLayout";
 import UserLayout from "../components/layout/UserLayout";
+import DashboardLayout from "../components/layout/DashboardLayout";
+import PageTitleManager from "../components/common/PageTitleManager";
+import UserManagement from "../../features/users/pages/UserManagement";
 
 function AppRouter() {
   return (
     <Router>
       <Suspense fallback={<div>Loading...</div>}>
+        <PageTitleManager />
         <Routes>
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Home />} />
@@ -35,25 +39,24 @@ function AppRouter() {
               <Route path="forgot-password" element={<ForgotPassword />} />
               <Route path="reset-password/:token" element={<ResetPassword />} />
             </Route>
-            <Route element={<PrivateRoutesLayout />}>
-              {/* Add private routes here */}
-              <Route
-                element={
-                  <AllowedRolesWrapper allowedRoles={["admin", "user"]} />
-                }
-              >
-                <Route path="profile" element={<MyProfile />} />
-                <Route path="dashboard">
-                  <Route index element={<Dashboard />} />
+          </Route>
+
+          <Route element={<PrivateRoutesLayout />}>
+            {/* Add private routes here */}
+            <Route
+              element={<AllowedRolesWrapper allowedRoles={["admin", "user"]} />}
+            >
+              <Route path="dashboard" element={<DashboardLayout />}>
+                <Route element={<Dashboard />}>
+                  <Route index element={null} />
+                  <Route path="profile" element={<MyProfile />} />
 
                   <Route
                     element={<AllowedRolesWrapper allowedRoles={["admin"]} />}
                   >
-                    <Route element={<AdminLayout />}>
-                      <Route path="user">
-                        <Route index element={<div>Users List</div>} />
-                        <Route path=":id" element={<div>User Detail</div>} />
-                      </Route>
+                    <Route path="users">
+                      <Route index element={<UserManagement />} />
+                      <Route path=":id" element={<div>User Detail</div>} />
                     </Route>
                   </Route>
                   <Route
@@ -76,10 +79,10 @@ function AppRouter() {
                 </Route>
               </Route>
             </Route>
-            {/* Add other routes here */}
-            <Route path="*" element={<NotFound />} />
-            <Route path="redirect" element={<Navigate to="/" replace />} />
           </Route>
+          {/* Add other routes here */}
+          <Route path="*" element={<NotFound />} />
+          <Route path="redirect" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
     </Router>
